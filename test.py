@@ -1,9 +1,6 @@
 from time import time
-from tkinter import N
 from discord.utils import get
 import discord
-import random
-import asyncio
 import re
 from datetime import datetime, timedelta, time
 
@@ -17,10 +14,10 @@ class MyClient(discord.Client):
     async def on_ready(self):
         self.prefix = '$'
         self.ignore_list = []
-        print('Logged in as')
-        print(self.user.name)
-        print(self.user.id)
-        print('------')
+        # print('Logged in as')
+        # print(self.user.name)
+        # print(self.user.id)
+        # print('------')
 
     async def on_message(self, message):
         # we do not want the bot to reply to itself
@@ -62,8 +59,7 @@ class MyClient(discord.Client):
                 return
 
             found = re.findall("((?:0?1?\d|2[0-3]):(?:[0-5]\d)(?: ?)|24:00(?: ?)|(?<!\d)[0-9]{1,2}(?: ?)(?=[apAP]))(?:(?<=[\d ])(am|AM|Am|pm|PM|Pm)\s?)?", message.content)
-            print(message.content)
-            print("Found", found)
+            
             if found != []:
                 
                 message_to_send = ""
