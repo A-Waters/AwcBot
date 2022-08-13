@@ -60,83 +60,79 @@ class MyClient(discord.Client):
             if time_zone == None: 
                 return
 
-            
-            if (message.author.id == 206117347939975168): # only alow me to activate it 
-                times_found = re.findall("((0?1?\d|2[0-3]):([0-5]\d)|24:00)", message.content)
+            times_found = re.findall("((0?1?\d|2[0-3]):([0-5]\d)|24:00)", message.content)
 
-                if times_found == []:
-                    times_found = re.findall("([1-9]{1,2}(?=[^0-9])(?=[^0-9,:]))",  message.content)
+            if times_found == []:
+                times_found = re.findall("([1-9]{1,2}(?=[^0-9])(?=[^0-9,:]))",  message.content)
 
-                if times_found != []:
+            if times_found != []:
+                
+                # find indexs of all matching string
+                indexes = []
+                for finds in times_found:
+                    indexes.append([message.content.find(finds[0], 0, len(message.content)), finds[0]])
                     
-                    # find indexs of all matching string
-                    indexes = []
-                    print("TIMES", times_found)
-                    for finds in times_found:
-                        indexes.append([message.content.find(finds[0], 0, len(message.content)), finds[0]])
-                        
+                
+                DayOrNight = None
+
+                # check of am or pm in sentance
+                for index in indexes:                     
+
+                    if re.search("^\s?am[^a-zA-Z]", message.content[index[0]+len(index[1]):]): 
+                        DayOrNight = "day"
+                    elif re.search("^\s?pm[^a-zA-Z]", message.content[index[0]+len(index[1]):]):
+                        DayOrNight = "night"
+
+                # check keywords
+                if DayOrNight == None:
+                    if any(words in message.content for words in morning_terms):
+                        DayOrNight = "day"
+                    elif any(words in message.content for words in night_terms):
+                        DayOrNight = "night"
+                
+                # get current time time
+                now = datetime.now()
+                current_time = now.time() 
+
+                ref_time = None
+
+                message_to_send = ""
+
+                for index in indexes:
+
+                    try:
+                        ref_time = datetime.strptime(index[1], "%I")
+                    except:
+                        ref_time = datetime.strptime(index[1], "%I:%M")
                     
-                    DayOrNight = None
 
-                    # check of am or pm in sentance
-                    for index in indexes:                     
 
-                        if re.search("^\s?am[^a-zA-Z]", message.content[index[0]+len(index[1]):]): 
-                            DayOrNight = "day"
-                        elif re.search("^\s?pm[^a-zA-Z]", message.content[index[0]+len(index[1]):]):
-                            DayOrNight = "night"
+                    # if current time is past noon and no other times are selected
 
-                    # check keywords
-                    if DayOrNight == None:
-                        if any(words in message.content for words in morning_terms):
-                            DayOrNight = "day"
-                        elif any(words in message.content for words in night_terms):
-                            DayOrNight = "night"
+                    if current_time > time(12,00) and not DayOrNight == "day":
+                        ref_time = ref_time + timedelta(hours=12)
+                                            
                     
-                    # get current time time
-                    now = datetime.now()
-                    current_time = now.time() 
-
-                    ref_time = None
-
-                    message_to_send = ""
-
-                    print(indexes)
-                    for index in indexes:
-
-                        try:
-                            ref_time = datetime.strptime(index[1], "%I")
-                        except:
-                            ref_time = datetime.strptime(index[1], "%I:%M")
-                        
-
-
-                        # if current time is past noon and no other times are selected
-
-                        if current_time > time(12,00) and not DayOrNight == "day":
-                            ref_time = ref_time + timedelta(hours=12)
-                                                
-                        
-                        if time_zone == "east":
-                            west_time = ref_time + timedelta(hours=3)
-                            cent_time = ref_time + timedelta(hours=1)
-                            east_time = ref_time
-                        
-                        elif time_zone == "central":
-                            west_time = ref_time + timedelta(hours=2)
-                            cent_time = ref_time 
-                            east_time = ref_time + timedelta(hours=-1)
-                        
-                        elif time_zone == "west":
-                            west_time = ref_time 
-                            cent_time = ref_time + timedelta(hours=-2)
-                            east_time = ref_time + timedelta(hours=-3)
-                        
-                        message_to_send += "Ref time: " +ref_time.strftime("%I:%M") + " | West: " + west_time.strftime("%I:%M") + " | Central: " + cent_time.strftime("%I:%M") + " | East: " + east_time.strftime("%I:%M") + " | \n"
+                    if time_zone == "east":
+                        west_time = ref_time + timedelta(hours=3)
+                        cent_time = ref_time + timedelta(hours=1)
+                        east_time = ref_time
                     
-                    message_to_send = "```" + message_to_send + "```"
+                    elif time_zone == "central":
+                        west_time = ref_time + timedelta(hours=2)
+                        cent_time = ref_time 
+                        east_time = ref_time + timedelta(hours=-1)
+                    
+                    elif time_zone == "west":
+                        west_time = ref_time 
+                        cent_time = ref_time + timedelta(hours=-2)
+                        east_time = ref_time + timedelta(hours=-3)
+                    
+                    message_to_send += "Ref time: " +ref_time.strftime("%I:%M %p") + " | West: " + west_time.strftime("%I:%M %p") + " | Central: " + cent_time.strftime("%I:%M %p") + " | East: " + east_time.strftime("%I:%M %p") + " | \n"
+                
+                message_to_send = "```" + message_to_send + "```"
 
-                    await message.channel.send(message_to_send)
+                await message.channel.send(message_to_send)
 
 
 
