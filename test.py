@@ -75,7 +75,7 @@ class MyClient(discord.Client):
             if found != []:
                 
                 message_to_send = ""
-                embedVar = discord.Embed(color=0x00ff00)
+                embedVar = discord.Embed(title="Time", description="Desc", color=0x00ff00)
                 
                 ref_times_list = []
                 local_times = []
@@ -90,7 +90,7 @@ class MyClient(discord.Client):
                     time_string = found[i][0] + "-" + found[i][1] +"-"+str(current_date)
         
                     time_string = time_string.replace(" ","")
-                    # print(time_string)
+                    print(time_string)
                     ref_time = None
 
                     if (found[i][1]==""):
@@ -134,18 +134,18 @@ class MyClient(discord.Client):
                     # print(ts-1660402800)
                     # ref_times_list.append(ref_time.strftime("%I:%M %p"))
                     # local_times.append("<t:"+str(int(ts))+":t>")
-                    message_to_send += "***Ref time:*** " + ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t> |\n"
+                    message_to_send += "***Ref time:*** " + ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t> \n"
                     # message_to_send += "***Ref time:*** " + ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t>" + " | \nPST: " + west_time.strftime("%I:%M %p") + " | CT: " + cent_time.strftime("%I:%M %p") + " | EST: " + east_time.strftime("%I:%M %p") + " | \n"
                 
-                # message_to_send = ">>> " + message_to_send
+
+
+                message_to_send = ">>> " + message_to_send
                 # ref_times_list = '\n'.join(ref_times_list);
                 # local_times = '\n'.join(local_times);
-
                 # embedVar.add_field(name="Ref Time",value=ref_times_list, inline=True)
                 # embedVar.add_field(name="Local", value=local_times, inline=True)
 
-                await message.channel.send(embed=embedVar)
-                await message.channel.send(embed=embedVar)
+                await message.channel.send(message_to_send)
 
 
 client = MyClient()
