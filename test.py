@@ -7,8 +7,12 @@ from datetime import datetime, timedelta, time
 from secrets import secrets
 
 
+
 morning_terms=["wake, morning"]
 night_terms=["sleep, night", "tn"]
+
+def get_unix_epochs(Gdatetime):
+    return (Gdatetime-datetime(1970,1,1)).total_seconds()+18000.0
 
 class MyClient(discord.Client):
     async def on_ready(self):
@@ -36,6 +40,14 @@ class MyClient(discord.Client):
             if "help" in message.content:
                 await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times```")
 
+            if "embed" in message.content:
+                names=[str(i) for i in range(10)]
+                names = '\n'.join(names);
+                embedVar = discord.Embed(title="Time", description="Desc", color=0x00ff00)
+                embedVar.add_field(name="Ref", value=names, inline=True)
+                embedVar.add_field(name="Local", value="<t:1543392060>", inline=True)
+                await message.channel.send(embed=embedVar)
+
         else:
 
 
@@ -62,32 +74,44 @@ class MyClient(discord.Client):
             
             if found != []:
                 
-                message_to_send = ""
+                # message_to_send = ""
+                embedVar = discord.Embed(color=0x00ff00)
+                
+                ref_times_list = []
+                local_times = []
+                
+
+
+                now = datetime.now()
+                current_time = now.time()
+                current_date = now.date()
 
                 for i in range(len(found)):
-                    time_string = found[i][0] + "-" + found[i][1]
+                    time_string = found[i][0] + "-" + found[i][1] +"-"+str(current_date)
         
                     time_string = time_string.replace(" ","")
-                    
+                    # print(time_string)
                     ref_time = None
 
                     if (found[i][1]==""):
                         
                         if ':' in time_string:
-                            ref_time = datetime.strptime(time_string, "%I:%M-")
+                            ref_time = datetime.strptime(time_string, "%I:%M--%Y-%m-%d")
                         else:
-                            ref_time = datetime.strptime(time_string, "%I-")
+                            ref_time = datetime.strptime(time_string, "%I--%Y-%m-%d")
                         
-                        now = datetime.now()
-                        current_time = now.time() 
+                        
 
                         if current_time > ref_time.time():
                             ref_time = ref_time + timedelta(hours=12)
+
+
+                        
                     else:
                         if ':' in time_string:
-                            ref_time = datetime.strptime(time_string, "%I:%M-%p")
+                            ref_time = datetime.strptime(time_string, "%I:%M-%p-%Y-%m-%d")
                         else:
-                            ref_time = datetime.strptime(time_string, "%I-%p")
+                            ref_time = datetime.strptime(time_string, "%I-%p-%Y-%m-%d")
 
 
                     
@@ -106,13 +130,21 @@ class MyClient(discord.Client):
                         cent_time = ref_time + timedelta(hours=2)
                         east_time = ref_time + timedelta(hours=3)
                     
-                    message_to_send += "Ref time: " +ref_time.strftime("%I:%M %p") + " | PST: " + west_time.strftime("%I:%M %p") + " | CT: " + cent_time.strftime("%I:%M %p") + " | EST: " + east_time.strftime("%I:%M %p") + " | \n"
+                    ts = get_unix_epochs(ref_time)
+                    # print(ts-1660402800)
+                    ref_times_list.append(ref_time.strftime("%I:%M %p"))
+                    local_times.append("<t:"+str(int(ts))+":t>")
+                    # message_to_send += "***Ref time:*** " + ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t> |\n"
+                    # message_to_send += "***Ref time:*** " + ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t>" + " | \nPST: " + west_time.strftime("%I:%M %p") + " | CT: " + cent_time.strftime("%I:%M %p") + " | EST: " + east_time.strftime("%I:%M %p") + " | \n"
                 
-            message_to_send = "```" + message_to_send + "```"
+                # message_to_send = ">>> " + message_to_send
+                ref_times_list = '\n'.join(ref_times_list);
+                local_times = '\n'.join(local_times);
 
-            await message.channel.send(message_to_send)
+                embedVar.add_field(name="Ref Time",value=ref_times_list, inline=True)
+                embedVar.add_field(name="Local", value=local_times, inline=True)
 
-
+                await message.channel.send(embed=embedVar)
 
 
 client = MyClient()
