@@ -90,47 +90,37 @@ class MyClient(discord.Client):
                     time_string = found[i][0] + "-" + found[i][1] +"-"+str(current_date)
         
                     time_string = time_string.replace(" ","")
-                    print(time_string)
+                    # print(time_string)
                     ref_time = None
 
                     if (found[i][1]==""):
-                        
+
                         if ':' in time_string:
                             ref_time = datetime.strptime(time_string, "%I:%M--%Y-%m-%d")
                         else:
                             ref_time = datetime.strptime(time_string, "%I--%Y-%m-%d")
                         
-                        
-
                         if current_time > ref_time.time():
                             ref_time = ref_time + timedelta(hours=12)
-
-
                         
                     else:
                         if ':' in time_string:
                             ref_time = datetime.strptime(time_string, "%I:%M-%p-%Y-%m-%d")
                         else:
                             ref_time = datetime.strptime(time_string, "%I-%p-%Y-%m-%d")
-
-
                     
-                    if time_zone == "east":
-                        west_time = ref_time + timedelta(hours=-3)
-                        cent_time = ref_time + timedelta(hours=-1)
-                        east_time = ref_time
+                    real_time = ref_time
                     
-                    elif time_zone == "central":
-                        west_time = ref_time + timedelta(hours=-2)
-                        cent_time = ref_time 
-                        east_time = ref_time + timedelta(hours=1)
+                    # if time_zone == "east":
+                    #     real_time = real_time + timedelta(hours=-1)
+                    
+                    if time_zone == "central":
+                        real_time = real_time + timedelta(hours=-1)
                     
                     elif time_zone == "west":
-                        west_time = ref_time 
-                        cent_time = ref_time + timedelta(hours=2)
-                        east_time = ref_time + timedelta(hours=3)
+                        real_time = real_time + timedelta(hours=-3)
                     
-                    ts = get_unix_epochs(ref_time)
+                    ts = get_unix_epochs(real_time)
                     # print(ts-1660402800)
                     # ref_times_list.append(ref_time.strftime("%I:%M %p"))
                     # local_times.append("<t:"+str(int(ts))+":t>")
