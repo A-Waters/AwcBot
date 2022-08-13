@@ -1,4 +1,5 @@
 from time import time
+from tkinter import N
 from discord.utils import get
 import discord
 import random
@@ -60,58 +61,39 @@ class MyClient(discord.Client):
             if time_zone == None: 
                 return
 
-            times_found = re.findall("((0?1?\d|2[0-3]):([0-5]\d)|24:00)", message.content)
-
-            if times_found == []:
-                times_found = re.findall("([1-9]{1,2}(?=[^0-9])(?=[^0-9,:]))",  message.content)
-
-            if times_found != []:
+            found = re.findall("((?:0?1?\d|2[0-3]):(?:[0-5]\d)(?: ?)|24:00(?: ?)|(?<!\d)[0-9]{1,2}(?: ?)(?=[apAP]))(?:(?<=[\d ])(am|AM|Am|pm|PM|Pm)\s?)?", message.content)
+            print(message.content)
+            print("Found", found)
+            if found != []:
                 
-                # find indexs of all matching string
-                indexes = []
-                for finds in times_found:
-                    indexes.append([message.content.find(finds[0], 0, len(message.content)), finds[0]])
-                    
-                
-                DayOrNight = None
-
-                # check of am or pm in sentance
-                for index in indexes:                     
-
-                    if re.search("^\s?am[^a-zA-Z]", message.content[index[0]+len(index[1]):]): 
-                        DayOrNight = "day"
-                    elif re.search("^\s?pm[^a-zA-Z]", message.content[index[0]+len(index[1]):]):
-                        DayOrNight = "night"
-
-                # check keywords
-                if DayOrNight == None:
-                    if any(words in message.content for words in morning_terms):
-                        DayOrNight = "day"
-                    elif any(words in message.content for words in night_terms):
-                        DayOrNight = "night"
-                
-                # get current time time
-                now = datetime.now()
-                current_time = now.time() 
-
-                ref_time = None
-
                 message_to_send = ""
 
-                for index in indexes:
-
-                    try:
-                        ref_time = datetime.strptime(index[1], "%I")
-                    except:
-                        ref_time = datetime.strptime(index[1], "%I:%M")
+                for i in range(len(found)):
+                    time_string = found[i][0] + "-" + found[i][1]
+        
+                    time_string = time_string.replace(" ","")
                     
+                    ref_time = None
+
+                    if (found[i][1]==""):
+                        
+                        if ':' in time_string:
+                            ref_time = datetime.strptime(time_string, "%I:%M-")
+                        else:
+                            ref_time = datetime.strptime(time_string, "%I-")
+                        
+                        now = datetime.now()
+                        current_time = now.time() 
+
+                        if current_time > ref_time.time():
+                            ref_time = ref_time + timedelta(hours=12)
+                    else:
+                        if ':' in time_string:
+                            ref_time = datetime.strptime(time_string, "%I:%M-%p")
+                        else:
+                            ref_time = datetime.strptime(time_string, "%I-%p")
 
 
-                    # if current time is past noon and no other times are selected
-
-                    if current_time > time(12,00) and not DayOrNight == "day":
-                        ref_time = ref_time + timedelta(hours=12)
-                                            
                     
                     if time_zone == "east":
                         west_time = ref_time + timedelta(hours=3)
@@ -130,9 +112,9 @@ class MyClient(discord.Client):
                     
                     message_to_send += "Ref time: " +ref_time.strftime("%I:%M %p") + " | West: " + west_time.strftime("%I:%M %p") + " | Central: " + cent_time.strftime("%I:%M %p") + " | East: " + east_time.strftime("%I:%M %p") + " | \n"
                 
-                message_to_send = "```" + message_to_send + "```"
+            message_to_send = "```" + message_to_send + "```"
 
-                await message.channel.send(message_to_send)
+            await message.channel.send(message_to_send)
 
 
 
