@@ -92,21 +92,21 @@ class MyClient(discord.Client):
 
                     
                     if time_zone == "east":
-                        west_time = ref_time + timedelta(hours=3)
-                        cent_time = ref_time + timedelta(hours=1)
+                        west_time = ref_time + timedelta(hours=-3)
+                        cent_time = ref_time + timedelta(hours=-1)
                         east_time = ref_time
                     
                     elif time_zone == "central":
-                        west_time = ref_time + timedelta(hours=2)
+                        west_time = ref_time + timedelta(hours=-2)
                         cent_time = ref_time 
-                        east_time = ref_time + timedelta(hours=-1)
+                        east_time = ref_time + timedelta(hours=1)
                     
                     elif time_zone == "west":
                         west_time = ref_time 
-                        cent_time = ref_time + timedelta(hours=-2)
-                        east_time = ref_time + timedelta(hours=-3)
+                        cent_time = ref_time + timedelta(hours=2)
+                        east_time = ref_time + timedelta(hours=3)
                     
-                    message_to_send += "Ref time: " +ref_time.strftime("%I:%M %p") + " | West: " + west_time.strftime("%I:%M %p") + " | Central: " + cent_time.strftime("%I:%M %p") + " | East: " + east_time.strftime("%I:%M %p") + " | \n"
+                    message_to_send += "Ref time: " +ref_time.strftime("%I:%M %p") + " | PST: " + west_time.strftime("%I:%M %p") + " | CT: " + cent_time.strftime("%I:%M %p") + " | EST: " + east_time.strftime("%I:%M %p") + " | \n"
                 
             message_to_send = "```" + message_to_send + "```"
 
