@@ -4,7 +4,6 @@ import discord
 import re
 from datetime import timedelta, time, tzinfo
 import datetime as dt
-import pytz
 
 from secrets import secrets
 
