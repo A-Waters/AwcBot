@@ -19,11 +19,10 @@ class MyClient(discord.Client):
     async def on_ready(self):
         self.prefix = '$'
         self.ignore_list = []
-        # print(pytz.all_timezones)
-        # print('Logged in as')
-        # print(self.user.name)
-        # print(self.user.id)
-        # print('------')
+        print('Logged in as')
+        print(self.user.name)
+        print(self.user.id)
+        print('------')
 
     async def on_message(self, message):
         # we do not want the bot to reply to itself
@@ -40,19 +39,65 @@ class MyClient(discord.Client):
                 self.ignore_list.remove(message.author.id)
 
             if "help" in message.content:
-                await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times```")
+                await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times \n * list roles : list all the roles a user can add and remove to themselves \n * add role : add a role to them selves '$add role minecraft' \n * remove role : remove a role from themselves '$remove role minecraft' ```")
 
-            if "embed" in message.content:
-                names=[str(i) for i in range(10)]
-                names = '\n'.join(names);
-                embedVar = discord.Embed(title="Time", description="Desc", color=0x00ff00)
-                embedVar.add_field(name="Ref", value=names, inline=True)
-                embedVar.add_field(name="Local", value="<t:1543392060>", inline=True)
-                await message.channel.send(embed=embedVar)
+            ''' if "embed" in message.content:
+                 names=[str(i) for i in range(10)]
+                names = '\n'.join(names)
+                embedVar = discord.Embed(title="Commands", description="A list of commands I use", color=0x00ff00)
+                embedVar.add_field(name="Command", value=names, inline=True)
+                embedVar.add_field(name="Description", value="", inline=True)
+                await message.channel.send(embed=embedVar)'''
+
+            if "list roles" in message.content:           
+                message_to_send = "```Here are a list of roles I can add and Remove:\n"
+                i = 1 
+                for role in [role.name for role in self.listRoles(message)]:
+                    if i % 4 != 0:
+                        message_to_send += role + " | "
+                    else:
+                        message_to_send += role + "\n"
+                    
+                    i += 1
+                    
+                message_to_send += "```"
+                await message.channel.send(message_to_send)
+
+            if "add role" in message.content:
+                role_to_add_name = message.content.split("role")[1].strip()
+                role_names = [role.name for role in self.listRoles(message)]
+                role_to_add = None
+                for role in self.listRoles(message):
+                        if role.name == role_to_add_name:
+                            role_to_add = role
+                            break
+
+                if role_to_add_name in role_names and role_to_add not in message.author.roles:
+                    await message.author.add_roles(role_to_add)
+                    await message.add_reaction('✅')
+                    
+                else:
+                    await message.add_reaction('❌')
+
+
+            if "remove role" in message.content:
+                role_to_remove_name = message.content.split("role")[1].strip()
+                role_names = [role.name for role in self.listRoles(message)]
+                role_to_remove = None
+                for role in self.listRoles(message):
+                        if role.name == role_to_remove_name:
+                            role_to_remove = role
+                            break
+
+                if role_to_remove_name in role_names and role_to_remove in message.author.roles:
+                    await message.author.remove_roles(role_to_remove)
+                    await message.add_reaction('✅')
+                    
+                else:
+                    await message.add_reaction('❌')
+
 
         else:
-
-
             if message.author.id in self.ignore_list:
                 return
             
@@ -60,15 +105,15 @@ class MyClient(discord.Client):
             
             time_zone = None
 
-            if "east cost" in roles:
+            if "east coast" in roles:
                 time_zone = "EST"
                 offset = "-0400"
             
-            elif "middle cost" in roles:
+            elif "middle coast" in roles:
                 time_zone = "CT"
                 offset = "-0500"
 
-            elif "west cost" in roles:
+            elif "west coast" in roles:
                 time_zone = "PST"
                 offset = "-0700"
 
@@ -84,11 +129,6 @@ class MyClient(discord.Client):
                 message_to_send = ""
                 embedVar = discord.Embed(title="Time", description="Desc", color=0x00ff00)
                 
-                ref_times_list = []
-                local_times = []
-                
-
-
                 now = dt.datetime.now()
                 current_time = now.time()
                 current_date = now.date()
@@ -97,7 +137,7 @@ class MyClient(discord.Client):
                     time_string = found[i][0] + "-" + found[i][1] +"-"+str(current_date)+"-"+offset
         
                     time_string = time_string.replace(" ","")
-                    # print(time_string)
+                    
                     ref_time = None
 
                     if (found[i][1]==""):
@@ -118,22 +158,17 @@ class MyClient(discord.Client):
                     
                     loc_time = ref_time
                     ts = get_unix_epochs(loc_time.astimezone())
-                    # print(ts-1660402800)
-                    # ref_times_list.append(ref_time.strftime("%I:%M %p"))
-                    # local_times.append("<t:"+str(int(ts))+":t>")
+                   
                     message_to_send += "*** "+ time_zone +":***  "+ ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t> \n"
-                    # message_to_send += "***Ref time:*** " + ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t>" + " | \nPST: " + west_time.strftime("%I:%M %p") + " | CT: " + cent_time.strftime("%I:%M %p") + " | EST: " + east_time.strftime("%I:%M %p") + " | \n"
-                
-
-
+                    
                 message_to_send = ">>> " + message_to_send
-                # ref_times_list = '\n'.join(ref_times_list);
-                # local_times = '\n'.join(local_times);
-                # embedVar.add_field(name="Ref Time",value=ref_times_list, inline=True)
-                # embedVar.add_field(name="Local", value=local_times, inline=True)
-
+                
                 await message.channel.send(message_to_send)
-
+    
+    
+    def listRoles(self, message):
+        return [role for role in message.guild.roles if role.color.value == 16777215] 
+         
 
 client = MyClient()
 client.run(secrets['token'])
