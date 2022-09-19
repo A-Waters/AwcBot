@@ -19,10 +19,10 @@ class MyClient(discord.Client):
     async def on_ready(self):
         self.prefix = '$'
         self.ignore_list = []
-        print('Logged in as')
-        print(self.user.name)
-        print(self.user.id)
-        print('------')
+        # print('Logged in as')
+        # print(self.user.name)
+        # print(self.user.id)
+        # print('------')
 
     async def on_message(self, message):
         # we do not want the bot to reply to itself
