@@ -101,6 +101,9 @@ class MyClient(discord.Client):
             if message.author.id in self.ignore_list:
                 return
             
+            if message.content.startswith("http"):
+                return 
+
             roles = [y.name.lower() for y in message.author.roles]
             
             time_zone = None
