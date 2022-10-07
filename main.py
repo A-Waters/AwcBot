@@ -6,7 +6,6 @@ from datetime import timedelta, time, tzinfo
 import datetime as dt
 import openai
 import subprocess
-import os
 
 
 from local_secrets import local_secrets
@@ -18,10 +17,6 @@ restart_sequence = "\nHuman: "
 
 morning_terms=["wake, morning"]
 night_terms=["sleep, night", "tn"]
-
-newpath = './convos' 
-if not os.path.exists(newpath):
-    os.makedirs(newpath)
 
 def get_unix_epochs(date_time):
     return (date_time-dt.datetime(1970,1,1, tzinfo=dt.timezone.utc)).total_seconds()
@@ -51,7 +46,7 @@ class MyClient(discord.Client):
                 self.ignore_list.remove(message.author.id)
 
             elif "help" in message.content:
-                await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times \n * list roles : list all the roles a user can add and remove to themselves \n * add role : add a role to them selves '$add role minecraft' \n * remove role : remove a role from themselves '$remove role minecraft' \n * $use me : use smart AI to talk to you \n * $please stop : stop using smart AI to talk to you ```")
+                await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times \n * list roles : list all the roles a user can add and remove to themselves \n * add role : add a role to them selves '$add role minecraft' \n * remove role : remove a role from themselves '$remove role minecraft' \n * use me : use smart AI to talk to you \n * please stop : stop using smart AI to talk to you ```")
 
             elif "list roles" in message.content:           
                 message_to_send = "```Here are a list of roles I can add and Remove:\n"
