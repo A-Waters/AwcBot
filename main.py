@@ -6,14 +6,22 @@ from datetime import timedelta, time, tzinfo
 import datetime as dt
 import openai
 import subprocess
+import os
 
 
 from local_secrets import local_secrets
-openai.api_key = local_secrets['openai']
 
+
+openai.api_key = local_secrets['openai']
+start_sequence = "\nAI:"
+restart_sequence = "\nHuman: "
 
 morning_terms=["wake, morning"]
 night_terms=["sleep, night", "tn"]
+
+newpath = './convos' 
+if not os.path.exists(newpath):
+    os.makedirs(newpath)
 
 def get_unix_epochs(date_time):
     return (date_time-dt.datetime(1970,1,1, tzinfo=dt.timezone.utc)).total_seconds()
@@ -127,7 +135,8 @@ class MyClient(discord.Client):
                     temperature=0.9,
                     max_tokens=25,
                     presence_penalty=0.6,
-                    frequency_penalty=0.1
+                    frequency_penalty=0.1,
+                    stop=["Human:", "AI:"]
                 ).choices[0].text
 
             else:
