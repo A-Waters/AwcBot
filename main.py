@@ -4,9 +4,10 @@ import discord
 import re
 from datetime import timedelta, time, tzinfo
 import datetime as dt
+import openai
 
-from secrets import secrets
-
+from local_secrets import local_secrets
+openai.api_key = local_secrets['openai']
 
 
 morning_terms=["wake, morning"]
@@ -19,6 +20,7 @@ class MyClient(discord.Client):
     async def on_ready(self):
         self.prefix = '$'
         self.ignore_list = []
+        self.useable = []
         # print('Logged in as')
         # print(self.user.name)
         # print(self.user.id)
@@ -35,21 +37,13 @@ class MyClient(discord.Client):
             if "ignore" in message.content:
                 self.ignore_list.append(message.author.id)
 
-            if "attention" in message.content:
+            elif "attention" in message.content:
                 self.ignore_list.remove(message.author.id)
 
-            if "help" in message.content:
+            elif "help" in message.content:
                 await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times \n * list roles : list all the roles a user can add and remove to themselves \n * add role : add a role to them selves '$add role minecraft' \n * remove role : remove a role from themselves '$remove role minecraft' ```")
 
-            ''' if "embed" in message.content:
-                 names=[str(i) for i in range(10)]
-                names = '\n'.join(names)
-                embedVar = discord.Embed(title="Commands", description="A list of commands I use", color=0x00ff00)
-                embedVar.add_field(name="Command", value=names, inline=True)
-                embedVar.add_field(name="Description", value="", inline=True)
-                await message.channel.send(embed=embedVar)'''
-
-            if "list roles" in message.content:           
+            elif "list roles" in message.content:           
                 message_to_send = "```Here are a list of roles I can add and Remove:\n"
                 i = 1 
                 for role in [role.name for role in self.listRoles(message)]:
@@ -63,7 +57,7 @@ class MyClient(discord.Client):
                 message_to_send += "```"
                 await message.channel.send(message_to_send)
 
-            if "add role" in message.content:
+            elif "add role" in message.content:
                 role_to_add_name = message.content.split("role")[1].strip()
                 role_names = [role.name for role in self.listRoles(message)]
                 role_to_add = None
@@ -80,7 +74,7 @@ class MyClient(discord.Client):
                     await message.add_reaction('❌')
 
 
-            if "remove role" in message.content:
+            elif "remove role" in message.content:
                 role_to_remove_name = message.content.split("role")[1].strip()
                 role_names = [role.name for role in self.listRoles(message)]
                 role_to_remove = None
@@ -96,6 +90,21 @@ class MyClient(discord.Client):
                 else:
                     await message.add_reaction('❌')
 
+            elif "use me" in message.content:
+                self.useable.append(message.author.id)
+                await message.add_reaction('✅')
+
+            elif "please stop" in message.content and message.author.id in self.useable:
+                self.useable.append(message.author.id)
+                await message.add_reaction('✅')
+
+            ''' if "embed" in message.content:
+                 names=[str(i) for i in range(10)]
+                names = '\n'.join(names)
+                embedVar = discord.Embed(title="Commands", description="A list of commands I use", color=0x00ff00)
+                embedVar.add_field(name="Command", value=names, inline=True)
+                embedVar.add_field(name="Description", value="", inline=True)
+                await message.channel.send(embed=embedVar)'''
 
         else:
             if message.author.id in self.ignore_list:
@@ -104,69 +113,81 @@ class MyClient(discord.Client):
             if message.content.startswith("http"):
                 return 
 
-            roles = [y.name.lower() for y in message.author.roles]
-            
-            time_zone = None
+            if message.author.id in self.useable:
+                prompt_to_send = "Human: Hello\nAi: Hello"+message.content + "\nAi:"
+                message_to_send = openai.Completion.create(engine="text-ada-001",
+                    prompt=prompt_to_send, 
+                    temperature=0.9,
+                    max_tokens=25,
+                    presence_penalty=0.6,
+                    frequency_penalty=0.1
+                ).choices[0].text
 
-            if "east coast" in roles:
-                time_zone = "EST"
-                offset = "-0400"
-            
-            elif "middle coast" in roles:
-                time_zone = "CT"
-                offset = "-0500"
+            else:
 
-            elif "west coast" in roles:
-                time_zone = "PST"
-                offset = "-0700"
-
-
-
-            if time_zone == None: 
-                return
-
-            found = re.findall("((?:0?1?\d|2[0-3]):(?:[0-5]\d)(?: ?)|24:00(?: ?)|(?<!\d)[0-9]{1,2}(?: ?)(?=[apAP]))(?:(?<=[\d ])(am|AM|Am|pm|PM|Pm)\s?)?", message.content)
-            
-            if found != []:
+                roles = [y.name.lower() for y in message.author.roles]
                 
-                message_to_send = ""
-                embedVar = discord.Embed(title="Time", description="Desc", color=0x00ff00)
-                
-                now = dt.datetime.now()
-                current_time = now.time()
-                current_date = now.date()
+                time_zone = None
 
-                for i in range(len(found)):
-                    time_string = found[i][0] + "-" + found[i][1] +"-"+str(current_date)+"-"+offset
-        
-                    time_string = time_string.replace(" ","")
+                if "east coast" in roles:
+                    time_zone = "EST"
+                    offset = "-0400"
+                
+                elif "middle coast" in roles:
+                    time_zone = "CT"
+                    offset = "-0500"
+
+                elif "west coast" in roles:
+                    time_zone = "PST"
+                    offset = "-0700"
+
+
+
+                if time_zone == None: 
+                    return
+
+                found = re.findall("((?:0?1?\d|2[0-3]):(?:[0-5]\d)(?: ?)|24:00(?: ?)|(?<!\d)[0-9]{1,2}(?: ?)(?=[apAP]))(?:(?<=[\d ])(am|AM|Am|pm|PM|Pm)\s?)?", message.content)
+                
+                if found != []:
                     
-                    ref_time = None
+                    message_to_send = ""
+                    embedVar = discord.Embed(title="Time", description="Desc", color=0x00ff00)
+                    
+                    now = dt.datetime.now()
+                    current_time = now.time()
+                    current_date = now.date()
 
-                    if (found[i][1]==""):
-
-                        if ':' in time_string:
-                            ref_time = dt.datetime.strptime(time_string, "%I:%M--%Y-%m-%d-%z")
-                        else:
-                            ref_time = dt.datetime.strptime(time_string, "%I--%Y-%m-%d-%z")
+                    for i in range(len(found)):
+                        time_string = found[i][0] + "-" + found[i][1] +"-"+str(current_date)+"-"+offset
+            
+                        time_string = time_string.replace(" ","")
                         
-                        if current_time > ref_time.time():
-                            ref_time = ref_time + timedelta(hours=12)
-                        
-                    else:
-                        if ':' in time_string:
-                            ref_time = dt.datetime.strptime(time_string, "%I:%M-%p-%Y-%m-%d-%z")
+                        ref_time = None
+
+                        if (found[i][1]==""):
+
+                            if ':' in time_string:
+                                ref_time = dt.datetime.strptime(time_string, "%I:%M--%Y-%m-%d-%z")
+                            else:
+                                ref_time = dt.datetime.strptime(time_string, "%I--%Y-%m-%d-%z")
+                            
+                            if current_time > ref_time.time():
+                                ref_time = ref_time + timedelta(hours=12)
+                            
                         else:
-                            ref_time = dt.datetime.strptime(time_string, "%I-%p-%Y-%m-%d-%z")
+                            if ':' in time_string:
+                                ref_time = dt.datetime.strptime(time_string, "%I:%M-%p-%Y-%m-%d-%z")
+                            else:
+                                ref_time = dt.datetime.strptime(time_string, "%I-%p-%Y-%m-%d-%z")
+                        
+                        loc_time = ref_time
+                        ts = get_unix_epochs(loc_time.astimezone())
                     
-                    loc_time = ref_time
-                    ts = get_unix_epochs(loc_time.astimezone())
-                   
-                    message_to_send += "*** "+ time_zone +":***  "+ ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t> \n"
+                        message_to_send += "*** "+ time_zone +":***  "+ ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t> \n"
+                        
+                    message_to_send = ">>> " + message_to_send
                     
-                message_to_send = ">>> " + message_to_send
-                
-                await message.channel.send(message_to_send)
+            await message.channel.send(message_to_send)
     
     
     def listRoles(self, message):
@@ -174,4 +195,4 @@ class MyClient(discord.Client):
          
 
 client = MyClient()
-client.run(secrets['token'])
+client.run(local_secrets['token'])

@@ -160,4 +160,4 @@ cython_debug/
 #.idea/
 
 
-secrets.py
+local_secrets.py
