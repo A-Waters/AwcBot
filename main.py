@@ -193,6 +193,7 @@ class MyClient(discord.Client):
     def listRoles(self, message):
         return [role for role in message.guild.roles if role.color.value == 16777215] 
          
-
-client = MyClient()
+intents = discord.Intents.default()
+intents.message_content = True
+client = MyClient(intents=intents)
 client.run(local_secrets['token'])
