@@ -124,7 +124,7 @@ class MyClient(discord.Client):
                 return 
 
             if message.author.id in self.useable:
-                prompt_to_send = "Human: Hello\nAi: Hello"+message.content + "\nAi:"
+                prompt_to_send = "Human: Hello\nAi: Hello"+message.content[:110] + "\nAi:"
                 message_to_send = openai.Completion.create(engine="text-ada-001",
                     prompt=prompt_to_send, 
                     temperature=0.9,
