@@ -1,5 +1,7 @@
 cd /home/alex/Documents/DiscordTimeBox
 
+pkill python3 -u alex
+
 git add .
 git reset --hard HEAD
 git pull
