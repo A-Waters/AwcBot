@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 cd /home/alex/Documents/DiscordTimeBox
 
 pkill python3 -u alex
