@@ -100,7 +100,7 @@ class MyClient(discord.Client):
                 await message.add_reaction('✅')
 
             elif "please stop" in message.content and message.author.id in self.useable:
-                self.useable.append(message.author.id)
+                self.useable.remove(message.author.id)
                 await message.add_reaction('✅')
 
             elif "update" in message.content:
