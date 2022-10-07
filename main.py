@@ -5,6 +5,8 @@ import re
 from datetime import timedelta, time, tzinfo
 import datetime as dt
 import openai
+import subprocess
+
 
 from local_secrets import local_secrets
 openai.api_key = local_secrets['openai']
@@ -98,6 +100,9 @@ class MyClient(discord.Client):
                 self.useable.append(message.author.id)
                 await message.add_reaction('✅')
 
+            elif "update" in message.content:
+                rc = subprocess.call("/home/alex/Documents/DiscordTimeBox/autopull.sh")
+
             ''' if "embed" in message.content:
                  names=[str(i) for i in range(10)]
                 names = '\n'.join(names)
@@ -105,6 +110,8 @@ class MyClient(discord.Client):
                 embedVar.add_field(name="Command", value=names, inline=True)
                 embedVar.add_field(name="Description", value="", inline=True)
                 await message.channel.send(embed=embedVar)'''
+
+
 
         else:
             if message.author.id in self.ignore_list:
