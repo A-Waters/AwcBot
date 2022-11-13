@@ -185,12 +185,15 @@ class MyClient(discord.Client):
 
 
             elif "list birthdays" in message.content:
+                values = sorted(self.birthdays.items(), key=lambda p: p[1])
+                print(values)
                 message_to_send = ""
-                for userID in self.birthdays:
+                for userID, date in values:
                     user = await self.fetch_user(userID)
                     message_to_send += self.birthdays[userID].strftime("%B %d") + " - " + user.display_name + "\n"
                 
-                await message.channel.send(message_to_send)
+                if message_to_send != "":
+                    await message.channel.send(message_to_send)
 
             # to look at if I want it later
             ''' if "embed" in message.content:
