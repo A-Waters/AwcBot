@@ -5,6 +5,7 @@ pkill python3 -u alex
 
 git add .
 git reset --hard HEAD
+git checkout main
 git pull
 
 source ./env/bin/activate
