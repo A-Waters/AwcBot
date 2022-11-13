@@ -10,6 +10,8 @@ import openai
 import subprocess
 import requests
 from time import sleep
+import pandas as pd
+import datetime
 
 
 from local_secrets import local_secrets
@@ -21,6 +23,13 @@ restart_sequence = "\nHuman: "
 
 morning_terms=["wake, morning"]
 night_terms=["sleep, night", "tn"]
+
+
+dateparse = lambda x: dt.datetime.strptime(x, '%B %d')
+
+
+
+
 
 def get_unix_epochs(date_time):
     return (date_time-dt.datetime(1970,1,1, tzinfo=dt.timezone.utc)).total_seconds()
@@ -34,7 +43,31 @@ class MyClient(discord.Client):
         # print(self.user.name)
         # print(self.user.id)
         # print('------')
-        self.called_once_a_day.start()
+        
+        
+        # birthday stuff
+        self.load_birthdays()
+
+
+    def save_birthdays(self,):
+        df = pd.DataFrame.from_dict(self.birthdays, orient="index")
+        df.to_csv("./data.csv", header=False, date_format="%B %d")
+
+    def load_birthdays(self,):
+        headers = ['UserID', 'Date']
+        dtypes = {'UserID': 'str', 'Date': 'str'}
+        parse_dates = ['Date']
+        self.birthdays = {}
+        try:
+            self.birthdays = pd.read_csv("./data.csv", 
+                    index_col=0,
+                    names=headers, 
+                    dtype=dtypes, 
+                    parse_dates=parse_dates,
+                    date_parser=dateparse).squeeze("columns").to_dict()
+            self.called_once_a_day.start()
+        except FileNotFoundError:
+            pass
 
 
     async def on_message(self, message):
@@ -44,16 +77,20 @@ class MyClient(discord.Client):
 
         # only respond to messages with the prefix
         if message.content.startswith(self.prefix):
-
+            
+            # tell the bot to ignore you
             if "ignore" in message.content:
                 self.ignore_list.append(message.author.id)
 
+            # tell the bot to not ignore you
             elif "attention" in message.content:
                 self.ignore_list.remove(message.author.id)
 
+            # elp
             elif "help" in message.content:
-                await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times \n * list roles : list all the roles a user can add and remove to themselves \n * add role : add a role to them selves '$add role minecraft' \n * remove role : remove a role from themselves '$remove role minecraft' \n * use me : use smart AI to talk to you \n * please stop : stop using smart AI to talk to you ```")
+                await message.channel.send("``` Here are a list of commands \n * ignore : stop trying to guess my times \n * attention : try to guess my times \n * list roles : list all the roles a user can add and remove to themselves \n * add role : add a role to them selves '$add role minecraft' \n * remove role : remove a role from themselves '$remove role minecraft' \n * use me : use smart AI to talk to you \n * please stop : stop using smart AI to talk to you \n * add birthday : '$add birthday March 31' birthday notification for the server \n * remove birthday : '$remove birthday @user' remove birthday notification for the server \n * list birthdays : see all birthdays saved in DB```")
 
+            # list roles the bot can manage
             elif "list roles" in message.content:           
                 message_to_send = "```Here are a list of roles I can add and Remove:\n"
                 i = 1 
@@ -67,7 +104,9 @@ class MyClient(discord.Client):
                     
                 message_to_send += "```"
                 await message.channel.send(message_to_send)
+            
 
+            # add a role to a user
             elif "add role" in message.content:
                 role_to_add_name = message.content.split("role")[1].strip()
                 role_names = [role.name for role in self.listRoles(message)]
@@ -84,7 +123,7 @@ class MyClient(discord.Client):
                 else:
                     await message.add_reaction('❌')
 
-
+            # remove a role to a user
             elif "remove role" in message.content:
                 role_to_remove_name = message.content.split("role")[1].strip()
                 role_names = [role.name for role in self.listRoles(message)]
@@ -101,6 +140,10 @@ class MyClient(discord.Client):
                 else:
                     await message.add_reaction('❌')
 
+
+
+
+            # GPT3 bot
             elif "use me" in message.content:
                 self.useable.append(message.author.id)
                 await message.add_reaction('✅')
@@ -109,9 +152,47 @@ class MyClient(discord.Client):
                 self.useable.remove(message.author.id)
                 await message.add_reaction('✅')
 
+
+            # update bot to most recent commit
             elif "update" in message.content:
                 rc = subprocess.call("/home/alex/Documents/DiscordTimeBox/autopull.sh")
 
+
+
+            # add user brithday : add birthday March 31
+            elif "add birthday" in message.content:
+                date = message.content.split("add birthday")[1]
+                
+                try:
+                    date = datetime.datetime.strptime(date.strip(), "%B %d")
+                    
+                except :
+                    await message.channel.send("Bad date format")
+                    return
+                
+                self.birthdays[str(message.author.id)] = date
+                self.save_birthdays()
+                await message.add_reaction('✅')
+
+
+            elif "remove birthday" in message.content:
+                user = message.content.split("remove birthday")[1].replace("<@","").replace(">","").strip()
+                self.birthdays.pop(str(user))
+
+                self.save_birthdays()
+                await message.add_reaction('✅')
+
+
+
+            elif "list birthdays" in message.content:
+                message_to_send = ""
+                for userID in self.birthdays:
+                    user = await self.fetch_user(userID)
+                    message_to_send += self.birthdays[userID].strftime("%B %d") + " - " + user.display_name + "\n"
+                
+                await message.channel.send(message_to_send)
+
+            # to look at if I want it later
             ''' if "embed" in message.content:
                  names=[str(i) for i in range(10)]
                 names = '\n'.join(names)
@@ -123,15 +204,24 @@ class MyClient(discord.Client):
 
 
         else:
+            # if we should ignore the user
             if message.author.id in self.ignore_list:
                 return
             
-            if message.content.startswith("http"):
+
+            # if its a link ignore
+            elif "http" in message.content:
                 return 
 
-            if message.author.id in self.useable:
-                prompt_to_send = "Human: Hello\nAi: Hello"+message.content[:110] + "\nAi:"
-                message_to_send = openai.Completion.create(engine="text-ada-001",
+
+
+             
+            else:
+                message_to_send = ""
+                            # open AI
+                if message.author.id in self.useable:
+                    prompt_to_send = "Human: Hello\nAi: Hello"+message.content[:110] + "\nAi:"
+                    message_to_send = openai.Completion.create(engine="text-ada-001",
                     prompt=prompt_to_send, 
                     temperature=0.9,
                     max_tokens=25,
@@ -140,8 +230,7 @@ class MyClient(discord.Client):
                     stop=["Human:", "AI:"]
                 ).choices[0].text
 
-            else:
-
+                # time checking
                 roles = [y.name.lower() for y in message.author.roles]
                 
                 time_zone = None
@@ -203,10 +292,13 @@ class MyClient(discord.Client):
                         message_to_send += "*** "+ time_zone +":***  "+ ref_time.strftime("%I:%M %p") + " | ***Local:*** <t:"+str(int(ts))+":t> \n"
                         
                     message_to_send = ">>> " + message_to_send
-                    
-            await message.channel.send(message_to_send)
+                
+                if (message_to_send != ""):  
+                    await message.channel.send(message_to_send)
     
-    @tasks.loop(hours=24)
+
+    # reddit get top post from sub reddit (jank)
+    '''@tasks.loop(hours=24)
     async def called_once_a_day(self,):
         # delay a raondom number of time to avoid detection
         sleep(random.randint(0,600))
@@ -226,10 +318,16 @@ class MyClient(discord.Client):
         message_channel = self.get_channel(797314600759722004)
         # print(f"Got channel {message_channel}")
         # await message_channel.send("Daily meme generated by GPT3")
-        await message_channel.send(link + " meme of the day")
+        await message_channel.send(link + " meme of the day")'''
 
-
-
+    @tasks.loop(hours=24)
+    async def called_once_a_day(self,):
+        message_channel = self.get_channel(958622085641568306)
+        current = datetime.datetime.now().date()
+        for userID in self.birthdays:
+            if current == self.birthdays[userID].date().replace(year=current.year):    
+                await message_channel.send("Its <@"+str(userID)+">'s Birthday! Happy Birthday!") 
+        
     def listRoles(self, message):
         return [role for role in message.guild.roles if role.color.value == 16777215] 
          
