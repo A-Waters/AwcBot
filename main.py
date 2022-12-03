@@ -325,11 +325,11 @@ class MyClient(discord.Client):
 
     @tasks.loop(hours=24)
     async def called_once_a_day(self,):
-        message_channel = self.get_channel(958622085641568306)
+        message_channel = self.get_channel(655557249640562731)
         current = datetime.datetime.now().date()
         for userID in self.birthdays:
             if current == self.birthdays[userID].date().replace(year=current.year):    
-                await message_channel.send("Its <@"+str(userID)+">'s Birthday! Happy Birthday!") 
+                await message_channel.send("@everyone Its <@"+str(userID)+">'s Birthday! Happy Birthday!", allowed_mentions = discord.AllowedMentions(everyone = True)) 
         
     def listRoles(self, message):
         return [role for role in message.guild.roles if role.color.value == 16777215] 
