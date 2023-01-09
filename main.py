@@ -207,6 +207,10 @@ class MyClient(discord.Client):
 
 
         else:
+            if "connect 4" in message.content.lower() or "connect4" in message.content.lower():
+                await message.delete()
+                return
+
             # if we should ignore the user
             if message.author.id in self.ignore_list:
                 return
