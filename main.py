@@ -259,8 +259,9 @@ class MyClient(discord.Client):
                 if time_zone == None: 
                     return
 
-                found = re.findall("((?:0?1?\d|2[0-3]):(?:[0-5]\d)(?: ?)|24:00(?: ?)|(?<!\d)[0-9]{1,2}(?: ?)(?=[apAP]))(?:(?<=[\d ])(am|AM|Am|pm|PM|Pm)\s?)?", message.content)
-                
+                found = re.findall("((?:0?1?\d|2[0-3]):(?:[0-5]\d)(?: )?(?:(?=am|AM|Am|pm|PM|Pm))?|(?:0?1?\d|2[0-3])(?: )?(?=am|AM|Am|pm|PM|Pm))(?:(am|AM|Am|pm|PM|Pm)?)", message.content)
+                # found = re.findall("((?:0?1?\d|2[0-3]):(?:[0-5]\d)(?: ?)|24:00(?: ?)|(?<!\d)[0-9]{1,2}(?: ?)(?=[apAP]))(?:(?<=[\d ])(am|AM|Am|pm|PM|Pm)\s?)?", message.content)
+                print(found)
                 if found != []:
                     
                     message_to_send = ""
