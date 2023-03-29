@@ -184,11 +184,7 @@ class MyClient(discord.Client):
 
 
             elif "list birthdays" in message.content:
-                # values = sorted(self.birthdays.items(), key=lambda p: p[1])
-                # print(values)
-                myKeys = list(self.birthdays.keys())
-                myKeys.sort()
-                values = {i: self.birthdays[i] for i in myKeys}
+                values = sorted(self.birthdays.items(), key=lambda p: p[1])
                 message_to_send = ""
                 for userID, date in values:
                     user = await self.fetch_user(userID)
