@@ -30,7 +30,6 @@ dateparse = lambda x: dt.datetime.strptime(x, '%B %d')
 
 
 
-
 def get_unix_epochs(date_time):
     return (date_time-dt.datetime(1970,1,1, tzinfo=dt.timezone.utc)).total_seconds()
 
@@ -43,7 +42,7 @@ class MyClient(discord.Client):
         # print(self.user.name)
         # print(self.user.id)
         # print('------')
-        
+        self.events = []
         
         # birthday stuff
         self.load_birthdays()
@@ -185,8 +184,11 @@ class MyClient(discord.Client):
 
 
             elif "list birthdays" in message.content:
-                values = sorted(self.birthdays.items(), key=lambda p: p[1])
-                print(values)
+                # values = sorted(self.birthdays.items(), key=lambda p: p[1])
+                # print(values)
+                myKeys = list(self.birthdays.keys())
+                myKeys.sort()
+                values = {i: self.birthdays[i] for i in myKeys}
                 message_to_send = ""
                 for userID, date in values:
                     user = await self.fetch_user(userID)
@@ -195,6 +197,17 @@ class MyClient(discord.Client):
                 if message_to_send != "":
                     await message.channel.send(message_to_send)
 
+            # would require multithreading
+            '''
+            elif "create event" in message.content:
+                event = message.content.split("event")
+                event = event[1].split("time:")
+                print(event)
+
+
+                pass
+            '''
+            
             # to look at if I want it later
             ''' if "embed" in message.content:
                  names=[str(i) for i in range(10)]
@@ -204,6 +217,9 @@ class MyClient(discord.Client):
                 embedVar.add_field(name="Description", value="", inline=True)
                 await message.channel.send(embed=embedVar)'''
 
+
+            
+            
 
 
         else:
