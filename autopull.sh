@@ -9,6 +9,7 @@ git checkout main
 git pull
 
 source ./env/bin/activate
+pip install -r ./requirements.txt
 nohup python3 -u ./main.py > output.log &
 deactivate
 disown
