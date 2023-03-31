@@ -29,7 +29,7 @@ night_terms=["sleep, night", "tn"]
 dateparse = lambda x: dt.datetime.strptime(x, '%B %d')
 
 tz = datetime.datetime.now().astimezone().tzinfo     # local timezone
-one_clock = datetime.time(hour=17, minute=45, second=0, microsecond=0, tzinfo=tz)
+one_clock = datetime.time(hour=18, minute=50, second=0, microsecond=0, tzinfo=tz)
 
 def get_unix_epochs(date_time):
     return (date_time-dt.datetime(1970,1,1, tzinfo=dt.timezone.utc)).total_seconds()
