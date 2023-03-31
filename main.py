@@ -2,18 +2,17 @@ import random
 from time import time, timezone
 from discord.utils import get
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 import re
-from datetime import timedelta, time, tzinfo
+from datetime import timedelta, time
 import datetime as dt
 import openai
 import subprocess
-import requests
 from time import sleep
 import pandas as pd
 import datetime
-import schedule
-import threading
+
+
 
 
 from local_secrets import local_secrets
@@ -29,33 +28,8 @@ night_terms=["sleep, night", "tn"]
 
 dateparse = lambda x: dt.datetime.strptime(x, '%B %d')
 
-
-# https://schedule.readthedocs.io/en/stable/background-execution.html
-def run_continuously(interval=1):
-    """Continuously run, while executing pending jobs at each
-    elapsed time interval.
-    @return cease_continuous_run: threading. Event which can
-    be set to cease continuous run. Please note that it is
-    *intended behavior that run_continuously() does not run
-    missed jobs*. For example, if you've registered a job that
-    should run every minute and you set a continuous run
-    interval of one hour then your job won't be run 60 times
-    at each interval but only once.
-    """
-    cease_continuous_run = threading.Event()
-
-    class ScheduleThread(threading.Thread):
-        @classmethod
-        def run(cls):
-            while not cease_continuous_run.is_set():
-                schedule.run_pending()
-                sleep(interval)
-
-    continuous_thread = ScheduleThread()
-    continuous_thread.daemon = True
-    continuous_thread.start()
-    return cease_continuous_run
-
+tz = datetime.datetime.now().astimezone().tzinfo     # local timezone
+one_clock = datetime.time(hour=17, minute=45, second=0, microsecond=0, tzinfo=tz)
 
 def get_unix_epochs(date_time):
     return (date_time-dt.datetime(1970,1,1, tzinfo=dt.timezone.utc)).total_seconds()
@@ -92,8 +66,7 @@ class MyClient(discord.Client):
                     parse_dates=parse_dates,
                     date_parser=dateparse).squeeze("columns").to_dict()
             
-            schedule.every().day.at("13:00:00").do(self.called_once_a_day)
-            stop_run_continuously = run_continuously()
+            self.called_once_a_day.start()
 
         except FileNotFoundError:
             pass
@@ -371,12 +344,14 @@ class MyClient(discord.Client):
         await message_channel.send(link + " meme of the day")'''
 
 
-    def called_once_a_day(self,):
-        message_channel = self.get_channel(655557249640562731)
+
+    @tasks.loop(time=one_clock)
+    async def called_once_a_day(self,):
+        message_channel = self.get_channel(687359381574123611)
         current = datetime.datetime.now().date()
         for userID in self.birthdays:
             if current == self.birthdays[userID].date().replace(year=current.year):    
-                message_channel.send("@everyone Its <@"+str(userID)+">'s Birthday! Happy Birthday!", allowed_mentions = discord.AllowedMentions(everyone = True)) 
+                await message_channel.send("@everyone Its <@"+str(userID)+">'s Birthday! Happy Birthday!", allowed_mentions = discord.AllowedMentions(everyone = True)) 
         
     def listRoles(self, message):
         return [role for role in message.guild.roles if role.color.value == 16777215] 
