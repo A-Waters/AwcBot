@@ -259,15 +259,15 @@ class MyClient(discord.Client):
 
                 if "east coast" in roles:
                     time_zone = "EST"
-                    offset = "-0300"
+                    offset = "-0500"
                 
                 elif "middle coast" in roles:
                     time_zone = "CT"
-                    offset = "-0400"
+                    offset = "-0600"
 
                 elif "west coast" in roles:
                     time_zone = "PST"
-                    offset = "-0600"
+                    offset = "-0800"
 
 
 
