@@ -267,7 +267,7 @@ class MyClient(discord.Client):
 
                 elif "west coast" in roles:
                     time_zone = "PST"
-                    offset = "-000"
+                    offset = "-0700"
 
 
 
