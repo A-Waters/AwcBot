@@ -65,7 +65,7 @@ class MyClient(discord.Client):
                     dtype=dtypes, 
                     parse_dates=parse_dates,
                     date_parser=dateparse).squeeze("columns").to_dict()
-            
+            self.birthdays.add("{ UserID: 'trobol', Date: '6/29/1999' }");
             self.called_once_a_day.start()
 
         except FileNotFoundError:
